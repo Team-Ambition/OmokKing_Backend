@@ -1,39 +1,36 @@
 const express = require('express');
 const app = express();
-const ws = require('ws');
-const HTTPServer = require('http');
+const cors = require('cors');
+const dotenv = require('dotenv');
+dotenv.config();
 
-const Port = 3001;
+app.use(express.json());
+
+//Port Setting
+const PORT = process.env.PORT;
 
 //API Test
+// app.get('/', (req, res) => {
+// 	res.send('API Running');
+// });
+
 app.get('/', (req, res) => {
-	res.send('API Running');
+    res.send(`
+    <!DOCTYPE html>
+        <h1>OAuth</h1>
+        <a href="/auth/google">LogIn</a>
+        <a href="/auth/google/logout">LogOut</a>
+    `);
 });
 
-//Start
-app.listen(Port, () => {
-	console.log(`API Running on Port ${Port}`);
-});
+//DataBase
+const db = require('./models');
 
-//Soket
-var WebSocketServer = require('ws').Server;
-var wss = new WebSocketServer({ port: 6974 });
+//Router
+const GoogleAuthRouter = require('./routes/GoogleAuth');
+app.use('/auth', GoogleAuthRouter);
 
-wss.on('connection', (ws, req) => {
-	let ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-  
-	console.log(ip + '접속되었습니다.');
-
-	ws.on('message', (message) => {
-		console.log(ip + '로 부터 받은 메시지 : ' + message);
-		ws.send('메세지:' + message);
-	});
-
-	ws.on('error', (error) => {
-		console.log(ip + '연결 오류 CODE : ' + error);
-	});
-
-	ws.on('close', () => {
-		console.log(ip + '접속 종료');
-	});
+//Port
+db.sequelize.sync().then(() => {
+    app.listen(PORT, () => console.log(`Server started on port ${PORT}`));
 });
