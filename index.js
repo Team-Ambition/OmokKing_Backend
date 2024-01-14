@@ -1,5 +1,6 @@
 const express = require('express');
 const app = express();
+const server = require('http').createServer(app);
 const cors = require('cors');
 const dotenv = require('dotenv');
 dotenv.config();
@@ -30,7 +31,11 @@ const db = require('./models');
 const GoogleAuthRouter = require('./routes/GoogleAuth');
 app.use('/auth', GoogleAuthRouter);
 
+//Soket
+const webSoket = require('./routes/Soket')
+webSoket(server)
+
 //Port
 db.sequelize.sync().then(() => {
-    app.listen(PORT, () => console.log(`Server started on port ${PORT}`));
+    server.listen(PORT, () => console.log(`Server started on port ${PORT}`));
 });

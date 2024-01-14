@@ -26,9 +26,7 @@ passport.use(
 			passReqToCallback: true,
 		},
 		async (request, accessToken, refreshToken, profile, done) => {
-			// console.log(profile);
-			// return done(null, profile);
-
+			console.log(accessToken)
 			try {
 				const existingGoogleAccount = await Users.findOne({
 					where: { googleId: profile.id },
