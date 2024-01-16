@@ -26,12 +26,14 @@ module.exports = (server) => {
     socket.on('news', (message) => {
       console.log('수신한 메시지:', message);
       socket.emit('news', "전송된 메시지 " + message);
+      socket.broadcast.emit('news', "전송된 메시지 " + message);
     });
 
     socket.on('getRooms', () => {
       // 다른 네임스페이스의 객체에도 접근할 수 있다.
       socket.emit('rooms', io.sockets.adapter.rooms);
     });
+
   });
 
 
