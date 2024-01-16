@@ -3,7 +3,7 @@ const passport = require('passport');
 const router = express.Router();
 const session = require('express-session');
 
-router.use(session({ secret: 'cats' }));
+router.use(session({ secret: 'cats', name: 'SessionToken' }));
 router.use(passport.initialize());
 router.use(passport.session());
 router.use(express.json());
@@ -13,7 +13,6 @@ require('./auth');
 //로그인확인 미들웨어
 const isLoggedIn = (req, res, next) => {
 	if (req.user) {
-		console.log(req.user)
 		next();
 	} else {
 		res.sendStatus(401);
@@ -64,6 +63,7 @@ router.get('/failure', (req, res) => {
  *        description: json형식으로 가져와짐
  */
 router.get('/protected', isLoggedIn, (req, res) => {
+	req.session.user = req.user.dataValues
 	res.send(req.user);
 });
 

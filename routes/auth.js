@@ -22,11 +22,10 @@ passport.use(
 		{
 			clientID: process.env.GOOGLE_CLIENT_ID,
 			clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-			callbackURL: 'https://port-0-omoking-1efqtf2dlrgiecc3.sel5.cloudtype.app/auth/google/callback',
-			passReqToCallback: true,
+			// callbackURL: 'https://port-0-omoking-1efqtf2dlrgiecc3.sel5.cloudtype.app/auth/google/callback'
+			callbackURL: 'http://localhost:3000/auth/google/callback'
 		},
 		async (request, accessToken, refreshToken, profile, done) => {
-			console.log(accessToken)
 			try {
 				const existingGoogleAccount = await Users.findOne({
 					where: { googleId: profile.id },
@@ -41,6 +40,7 @@ passport.use(
 						const newAccount = await Users.create(
 							getProfile(profile)
 						);
+
 						return done(null, newAccount);
 					}
 					return done(null, existingEmailAccount);
