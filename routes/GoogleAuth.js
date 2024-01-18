@@ -46,7 +46,7 @@ router.get(
 );
 
 router.get('/failure', (req, res) => {
-	res.send('User Failure');
+	return res.json({ Status: "401", Message: "로그인 도중 알수없는 에러가 발생하였습니다. 다시 시도해주세요!" })
 });
 
 /**
@@ -55,16 +55,23 @@ router.get('/failure', (req, res) => {
  *    get:
  *      tags:
  *      - GoogleAuth
- *      description: 회원정보 가져오기
+ *      description: 로그인 상태 확인
  *      produces:
  *      - application/json
  *      responses:
  *       200:
  *        description: json형식으로 가져와짐
+ *       401:
+ *        description: Unauthorized
  */
 router.get('/protected', isLoggedIn, (req, res) => {
-	req.session.user = req.user.dataValues
-	res.send(req.user);
+	const UserInfo = req.user.dataValues
+	req.session.user = UserInfo
+	if (req.user) {
+		return res.json({ Status: "200", Message: { name: UserInfo.name, profileImg: UserInfo.profileImg } })
+	} else {
+		return res.json({ Status: "401", Message: "Unauthorized" })
+	}
 });
 
 /**
@@ -85,8 +92,7 @@ router.get('/google/logout', (req, res, next) => {
 		if (err) {
 			return next(err);
 		} else {
-			console.log('로그아웃됨.');
-			res.redirect('/');
+			return res.redirect('/').json({ Status: "200", Message: "성공적으로 로그아웃되었습니다."})
 		}
 	});
 });
