@@ -5,21 +5,20 @@ module.exports = (server) => {
 
   const roomList = []
 
-  const roomInfo = {
-    roomName: "",
-    P1_SocketId: "",
-    P1_Name: "",
-    P1_IMG: "",
-    P2_SocketId: "",
-    P2_Name: "",
-    P2_IMG: "",
-    Full: false,
-    Omok: []
-  }
-
   let 접속자수 = 0
 
   io.on('connection', (socket) => {
+    const roomInfo = {
+      roomName: "",
+      P1_SocketId: "",
+      P1_Name: "",
+      P1_IMG: "",
+      P2_SocketId: "",
+      P2_Name: "",
+      P2_IMG: "",
+      Full: false,
+      Omok: []
+    }
     const req = socket.request;
     const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
     console.log('클라이언트 접속', ip, socket.id,);
@@ -72,28 +71,26 @@ module.exports = (server) => {
       socket.broadcast.to(roomName).emit('Main', P1_Name + " 님이 방에 입장하였습니다.")
       io.to(roomName).emit('Main', roomInfo)
 
-      // console.log(roomInfo)
       console.log(roomList)
     })
 
     //방 들어가기
     socket.on('join', (data) => {
       const { roomName, P2_Name, P2_IMG } = data
-      roomInfo.P2_SocketId = socket.id
-      roomInfo.P2_Name = P2_Name
-      roomInfo.P2_IMG = P2_IMG
-      roomInfo.Omok = []
-      
       const roomIndex = roomList.findIndex(obj => obj.roomName == roomName)
-      roomList[roomIndex] = (roomInfo)
+      roomList[roomIndex].P2_SocketId = socket.id
+      roomList[roomIndex].P2_Name = P2_Name
+      roomList[roomIndex].P2_IMG = P2_IMG
+      roomList[roomIndex].Omok = []
+
 
       //두번 참가 및 생성이 안되도록
-      // if (socket.rooms.size > 1) {
-      //   console.log(`socket ${socket.id} is already in room.`);
-      //   console.log(socket.rooms);
-      //   socket.emit("error", "이미 다른 방에 참가중입니다.");
-      //   return;
-      // }
+      if (socket.rooms.size > 1) {
+        console.log(`socket ${socket.id} is already in room.`);
+        console.log(socket.rooms);
+        socket.emit("error", "이미 다른 방에 참가중입니다.");
+        return;
+      }
 
       //방이 가득찼는 지 검사
       if (roomList[roomIndex].Full == true) {
@@ -103,23 +100,33 @@ module.exports = (server) => {
       } else {
         socket.join(roomName);
       }
-      roomInfo.Full = true
+      roomList[roomIndex].Full = true
       socket.broadcast.to(roomName).emit('Main', P2_Name + " 님이 방에 입장하였습니다.")
       io.to(roomName).emit('Main', roomInfo)
 
-      // console.log(roomInfo)
       console.log(roomList)
     })
 
     //방 나가기
     socket.on('leave', (data) => {
-      const { roomName } = data
+      const { roomName, name } = data
+      const roomIndex = roomList.findIndex(obj => obj.roomName == roomName)
+      if (roomList[roomIndex].Full == false) {
+        roomList.splice(roomIndex, roomIndex + 1)
+      } else {
+        roomList[roomIndex].Full = false
+      }
+      socket.broadcast.to(roomName).emit('Main', name + " 님이 방에 퇴장하였습니다.")
       socket.leave(roomName);
+
+      console.log(roomList)
     })
 
     socket.on('message', (data) => {
       const { roomName, Omok } = data
-      io.socket.in(roomName).emit('message', Omok)
+      const roomIndex = roomList.findIndex(obj => obj.roomName == roomName)
+      roomList[roomIndex].Omok = Omok
+      io.to(roomName).emit('Main', Omok)
     })
   })
 };
