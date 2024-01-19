@@ -24,9 +24,7 @@ module.exports = (server) => {
       // console.log(`Socket event : ${event}`);
     });
 
-    const roomInfo = {
-
-    }
+    const roomInfo = {}
 
     //방 만들기
     socket.on("room_new", (name) => {
@@ -47,7 +45,9 @@ module.exports = (server) => {
       //   return;
       // }
 
-      roomInfo.push = { roomName: name, blackPlayer: socket.id };
+      roomInfo.roomName = name
+      roomInfo.blackPlayer = socket.id
+      io.to(name).emit('join', socket.id + " 님이 방에 입장하였습니다.")
       socket.join(name);
       // console.log(roomInfo)
     })
@@ -56,15 +56,16 @@ module.exports = (server) => {
       console.log('Join')
       const room = message
 
-      roomInfo.whitePlayer = socket.id;
+      roomInfo.whitePlayer = socket.id
+      roomInfo.Omok = []
       socket.join(room);
-      io.to(room).emit('join', "방에 입장하였습니다.")
+      io.to(room).emit('join', socket.id + " 님이 방에 입장하였습니다.")
 
       console.log(roomInfo)
     })
 
     socket.on('message', (data) => {
-      io.to(data.roomName).emit('message', data.message)
+      io.to(data.roomName).emit('message', data)
     })
   })
 };
