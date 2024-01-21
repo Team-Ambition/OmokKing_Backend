@@ -15,7 +15,7 @@ const isLoggedIn = (req, res, next) => {
 	if (req.user) {
 		next();
 	} else {
-		res.sendStatus(401);
+		res.json("로그인 상태가 아닙니다.")
 	}
 };
 
@@ -40,8 +40,8 @@ router.get(
 router.get(
 	'/google/callback',
 	passport.authenticate('google', {
-		successRedirect: '/auth/protected',
-		failureRedirect: '/auth/failure',
+		successRedirect: 'http://localhost:3001',
+		failureRedirect: '/',
 	})
 );
 
@@ -92,7 +92,7 @@ router.get('/google/logout', (req, res, next) => {
 		if (err) {
 			return next(err);
 		} else {
-			return res.redirect('/').json({ Status: "200", Message: "성공적으로 로그아웃되었습니다."})
+			return res.json({ Status: "200", Message: "성공적으로 로그아웃되었습니다." })
 		}
 	});
 });
