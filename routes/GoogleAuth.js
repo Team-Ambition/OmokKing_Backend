@@ -2,8 +2,12 @@ const express = require('express');
 const passport = require('passport');
 const router = express.Router();
 const session = require('express-session');
+const { Users } = require('../models');
+const { default: axios } = require('axios');
+const { sign } = require('jsonwebtoken')
+const { jwtDecode } = require("jwt-decode")
 
-router.use(session({ secret: 'cats', name: 'SessionToken' }));
+router.use(session({ secret: process.env.SESSION_SECRET, name: 'SessionToken', secure: false }));
 router.use(passport.initialize());
 router.use(passport.session());
 router.use(express.json());
@@ -15,7 +19,7 @@ const isLoggedIn = (req, res, next) => {
 	if (req.user) {
 		next();
 	} else {
-		res.json("로그인 상태가 아닙니다.")
+		res.json({ message: "로그인 상태가 아닙니다." })
 	}
 };
 
@@ -39,10 +43,12 @@ router.get(
 
 router.get(
 	'/google/callback',
-	passport.authenticate('google', {
-		successRedirect: 'http://localhost:3001',
-		failureRedirect: '/',
-	})
+	passport.authenticate('google', { failureRedirect: '/login' }),
+	function (req, res) {
+		const token = sign({ userId: req.user.dataValues.googleId }, process.env.JWT_SECRET);
+		res.cookie("accessToken", token)
+		res.redirect('http://localhost:3001/');
+	}
 );
 
 router.get('/failure', (req, res) => {
@@ -51,11 +57,11 @@ router.get('/failure', (req, res) => {
 
 /**
  * @swagger
- *  /auth/protected:
+ *  /auth/userInfo:
  *    get:
  *      tags:
  *      - GoogleAuth
- *      description: 로그인 상태 확인
+ *      description: 유저 정보 가져오기
  *      produces:
  *      - application/json
  *      responses:
@@ -64,13 +70,16 @@ router.get('/failure', (req, res) => {
  *       401:
  *        description: Unauthorized
  */
-router.get('/protected', isLoggedIn, (req, res) => {
-	const UserInfo = req.user.dataValues
-	req.session.user = UserInfo
-	if (req.user) {
-		return res.json({ Status: "200", Message: { name: UserInfo.name, profileImg: UserInfo.profileImg } })
-	} else {
-		return res.json({ Status: "401", Message: "Unauthorized" })
+router.get('/userInfo', async (req, res) => {
+	const accessToken = req.get('accessToken');
+
+	if (!accessToken) return res.json({ error: '로그인 상태가 아닙니다.' });
+	try {
+		const validToken = jwtDecode(accessToken);
+		const user = await Users.findOne({ where: { googleId: validToken.userId } });
+		res.json({ name: user.name, profileImg: user.profileImg })
+	} catch (err) {
+		return res.json({ error: err });
 	}
 });
 
@@ -92,7 +101,10 @@ router.get('/google/logout', (req, res, next) => {
 		if (err) {
 			return next(err);
 		} else {
-			return res.json({ Status: "200", Message: "성공적으로 로그아웃되었습니다." })
+			req.session.destroy(function () {
+				req.session;
+			});
+			res.redirect('http://localhost:3001/')
 		}
 	});
 });

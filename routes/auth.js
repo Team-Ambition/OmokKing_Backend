@@ -2,6 +2,7 @@ const passport = require('passport');
 const { Users } = require('../models');
 const GoogleStrategy = require('passport-google-oauth2').Strategy;
 
+
 const getProfile = (profile) => {
 	const { id, displayName, emails, provider, picture } = profile;
 	if (emails?.length) {
@@ -25,7 +26,7 @@ passport.use(
 			// callbackURL: 'https://omoking.jamkris.kro.kr/auth/google/callback'
 			callbackURL: 'http://localhost:3000/auth/google/callback'
 		},
-		async (request, accessToken, refreshToken, profile, done) => {
+		async (accessToken, refreshToken, profile, done) => {
 			try {
 				const existingGoogleAccount = await Users.findOne({
 					where: { googleId: profile.id },
@@ -54,13 +55,13 @@ passport.use(
 );
 
 passport.serializeUser((user, done) => {
-  done(null, user.id);
+	done(null, user.id);
 });
 
 passport.deserializeUser((id, done) => {
-  Users.findByPk(id)
-    .then((user) => {
-      done(null, user);
-    })
-    .catch((error) => done(error));
+	Users.findByPk(id)
+		.then((user) => {
+			done(null, user);
+		})
+		.catch((error) => done(error));
 });
