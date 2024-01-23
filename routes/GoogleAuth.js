@@ -6,6 +6,7 @@ const { Users } = require('../models');
 const { default: axios } = require('axios');
 const { sign } = require('jsonwebtoken')
 const { jwtDecode } = require("jwt-decode")
+const url = require('url')
 
 router.use(session({ secret: process.env.SESSION_SECRET, name: 'SessionToken', secure: false }));
 router.use(passport.initialize());
@@ -46,8 +47,7 @@ router.get(
 	passport.authenticate('google', { failureRedirect: '/login' }),
 	function (req, res) {
 		const token = sign({ userId: req.user.dataValues.googleId }, process.env.JWT_SECRET);
-		res.cookie("accessToken", token)
-		res.redirect('http://localhost:3001/');
+		res.redirect(`http://localhost:3001/?accessToken=${token}`)
 	}
 );
 
@@ -71,7 +71,7 @@ router.get('/failure', (req, res) => {
  *        description: Unauthorized
  */
 router.get('/userInfo', async (req, res) => {
-	const accessToken = req.get('accessToken');
+	const accessToken = req.cookies('accessToken')
 
 	if (!accessToken) return res.json({ error: '로그인 상태가 아닙니다.' });
 	try {
