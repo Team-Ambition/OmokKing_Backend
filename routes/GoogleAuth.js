@@ -20,7 +20,7 @@ const isLoggedIn = (req, res, next) => {
 	if (req.user) {
 		next();
 	} else {
-		res.json({ message: "로그인 상태가 아닙니다." })
+		res.json({ message: "로그인 상태가 아닙니다. " })
 	}
 };
 
