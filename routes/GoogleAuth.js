@@ -13,6 +13,8 @@ router.use(passport.initialize());
 router.use(passport.session());
 router.use(express.json());
 
+const JWT_SECRET = process.env.JWT_SECRET
+
 require('./auth');
 
 //로그인확인 미들웨어
@@ -46,7 +48,7 @@ router.get(
 	'/google/callback',
 	passport.authenticate('google', { failureRedirect: '/login' }),
 	function (req, res) {
-		const token = sign({ userId: req.user.dataValues.googleId }, process.env.JWT_SECRET);
+		const token = sign({ userId: req.user.dataValues.googleId }, JWT_SECRET);
 		res.redirect(`http://localhost:3001/?accessToken=${token}`)
 	}
 );
