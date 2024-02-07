@@ -73,13 +73,13 @@ router.get('/failure', (req, res) => {
  *        description: Unauthorized
  */
 router.get('/userInfo', async (req, res) => {
-	const accessToken = req.cookies('accessToken')
+	const accessToken = req.get('accessToken')
 
 	if (!accessToken) return res.json({ error: '로그인 상태가 아닙니다.' });
 	try {
 		const validToken = jwtDecode(accessToken);
 		const user = await Users.findOne({ where: { googleId: validToken.userId } });
-		res.json({ name: user.name, profileImg: user.profileImg })
+		return res.json({ name: user.name, profileImg: user.profileImg })
 	} catch (err) {
 		return res.json({ error: err });
 	}
