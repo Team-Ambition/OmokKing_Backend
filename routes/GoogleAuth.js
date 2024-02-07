@@ -49,7 +49,7 @@ router.get(
 	passport.authenticate('google', { failureRedirect: '/login' }),
 	function (req, res) {
 		const token = sign({ userId: req.user.dataValues.googleId }, JWT_SECRET);
-		res.redirect(`http://localhost:3001/?accessToken=${token}`)
+		res.redirect(`${process.env.REDIRECT}?accessToken=${token}`)
 	}
 );
 
@@ -106,7 +106,7 @@ router.get('/google/logout', (req, res, next) => {
 			req.session.destroy(function () {
 				req.session;
 			});
-			res.redirect('http://localhost:3001/')
+			res.redirect(`${process.env.REDIRECT}`)
 		}
 	});
 });
